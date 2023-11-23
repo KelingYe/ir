@@ -281,6 +281,21 @@ struct aA_returnStmt_ {
     aA_rightVal retVal;
 };
 
+/*
+struct aA_codeBlockStmt_ {
+    A_pos pos;
+    A_codeBlockStmtType kind;
+    union {
+        aA_varDeclStmt varDeclStmt;
+        aA_assignStmt assignStmt;
+        aA_callStmt callStmt;
+        aA_ifStmt ifStmt;
+        aA_whileStmt whileStmt;
+        aA_returnStmt returnStmt;
+        // continue and break do not need other info
+    } u;
+};
+*/
 struct aA_codeBlockStmt_ {
     A_pos pos;
     A_codeBlockStmtType kind;

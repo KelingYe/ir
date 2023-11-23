@@ -363,9 +363,9 @@ RightValList
 ;
 
 ArrayExpr
-: ID LSQU IndexExpr RSQU
+: LeftVal LSQU IndexExpr RSQU
 {
-  $$ = A_ArrayExpr($1->pos, $1->id, $3);
+  $$ = A_ArrayExpr($1->pos, $1, $3);
 }
 ;
 
@@ -381,9 +381,9 @@ IndexExpr
 ;
 
 MemberExpr
-: ID DOT ID
+: LeftVal DOT ID
 {
-  $$ = A_MemberExpr($1->pos, $1->id, $3->id);
+  $$ = A_MemberExpr($1->pos, $1, $3->id);
 }
 ;
 
@@ -607,13 +607,16 @@ WhileStmt
 }
 ;
 
-ReturnStmt
-: RET RightVal SEMICOLON
+ReturnStmt: 
+RET RightVal SEMICOLON
 {
   $$ = A_ReturnStmt($1, $2);
 }
+| RET SEMICOLON
+{
+  $$ = A_ReturnStmt($1, NULL);
+}
 ;
-
 %%
 
 extern "C"{

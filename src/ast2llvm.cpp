@@ -505,9 +505,23 @@ std::vector<LLVMIR::L_def*> ast2llvmProg_first(aA_program p)
     return defs;
 }
 
+//第二次遍历
 std::vector<Func_local*> ast2llvmProg_second(aA_program p)
 {
-    
+    vector<Func_local*> funcs;
+    for (const auto &v:p->programElements){
+        switch (v->kind)
+        {
+        case A_programElementType::A_programFnDefKind:
+            funcs.push_back(ast2llvmFunc(v->u.fnDef));
+            emit_irs.clear();
+            localVarMap.clear();
+            break;
+        
+        default:
+            break;
+        }
+    }
 }
 
 Func_local* ast2llvmFunc(aA_fnDef f)

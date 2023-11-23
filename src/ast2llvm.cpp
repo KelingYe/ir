@@ -505,7 +505,7 @@ std::vector<LLVMIR::L_def*> ast2llvmProg_first(aA_program p)
     return defs;
 }
 
-//第二次遍历
+//第二次遍历程序ast
 std::vector<Func_local*> ast2llvmProg_second(aA_program p)
 {
     vector<Func_local*> funcs;

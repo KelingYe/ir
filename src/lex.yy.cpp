@@ -806,12 +806,12 @@ YY_RULE_SETUP
 case 4:
 YY_RULE_SETUP
 #line 15 "lexer.lex"
-{  yylval.pos = A_Pos(line, col); col += yyleng; return FUNC;}
+{  yylval.pos = A_Pos(line, col); col += yyleng; return FUNCTION;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
 #line 16 "lexer.lex"
-{  yylval.pos = A_Pos(line, col); col += yyleng; return RET;}
+{  yylval.pos = A_Pos(line, col); col += yyleng; return RETURN;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP

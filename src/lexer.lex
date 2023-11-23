@@ -12,8 +12,8 @@ extern int line, col;
 "let"                {  yylval.pos = A_Pos(line, col); col += yyleng; return LET;}
 "int"                {  yylval.pos = A_Pos(line, col); col += yyleng; return INT;}
 "struct"             {  yylval.pos = A_Pos(line, col); col += yyleng; return STRUCT;}
-"fn"                 {  yylval.pos = A_Pos(line, col); col += yyleng; return FUNC;}
-"ret"                {  yylval.pos = A_Pos(line, col); col += yyleng; return RET;}
+"fn"                 {  yylval.pos = A_Pos(line, col); col += yyleng; return FUNCTION;}
+"ret"                {  yylval.pos = A_Pos(line, col); col += yyleng; return RETURN;}
 "continue"           {  yylval.pos = A_Pos(line, col); col += yyleng; return CONTINUE;}
 "break"              {  yylval.pos = A_Pos(line, col); col += yyleng; return BREAK;}
 "if"                 {  yylval.pos = A_Pos(line, col); col += yyleng; return IF;}

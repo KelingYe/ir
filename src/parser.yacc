@@ -87,11 +87,11 @@ extern int  yywrap();
 %token <pos> IF
 %token <pos> ELSE
 %token <pos> WHILE
-%token <pos> FUNC
+%token <pos> FUNCTION
 %token <pos> RETV
 %token <pos> CONTINUE
 %token <pos> BREAK
-%token <pos> RET
+%token <pos> RETURN
 %token <pos> COL
 %token <tokenId> ID
 %token <tokenNum> NUM
@@ -493,11 +493,11 @@ FnDeclStmt
 ;
 
 FnDecl
-: FUNC ID LPAR ParamDecl RPAR
+: FUNCTION ID LPAR ParamDecl RPAR
 {
   $$ = A_FnDecl($1, $2->id, $4, NULL);
 }
-| FUNC ID LPAR ParamDecl RPAR RETV Type
+| FUNCTION ID LPAR ParamDecl RPAR RETV Type
 {
   $$ = A_FnDecl($1, $2->id, $4, $7);
 }
@@ -607,12 +607,12 @@ WhileStmt
 }
 ;
 
-ReturnStmt: 
-RET RightVal SEMICOLON
+ReturnStmt
+: RETURN RightVal SEMICOLON
 {
   $$ = A_ReturnStmt($1, $2);
 }
-| RET SEMICOLON
+| RETURN SEMICOLON
 {
   $$ = A_ReturnStmt($1, NULL);
 }

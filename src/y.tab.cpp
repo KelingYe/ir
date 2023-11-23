@@ -141,11 +141,11 @@ extern int yydebug;
     IF = 284,
     ELSE = 285,
     WHILE = 286,
-    FUNC = 287,
+    FUNCTION = 287,
     RETV = 288,
     CONTINUE = 289,
     BREAK = 290,
-    RET = 291,
+    RETURN = 291,
     COL = 292,
     ID = 293,
     NUM = 294
@@ -181,11 +181,11 @@ extern int yydebug;
 #define IF 284
 #define ELSE 285
 #define WHILE 286
-#define FUNC 287
+#define FUNCTION 287
 #define RETV 288
 #define CONTINUE 289
 #define BREAK 290
-#define RET 291
+#define RETURN 291
 #define COL 292
 #define ID 293
 #define NUM 294
@@ -579,8 +579,8 @@ static const char *const yytname[] =
   "$end", "error", "$undefined", "ADD", "SUB", "MUL", "DIV", "SEMICOLON",
   "LPAR", "RPAR", "DOT", "COMMA", "AND", "GRE", "STRUCT", "LSQU", "RSQU",
   "LET", "ASSIGN", "INT", "LBRA", "RBRA", "OR", "NOT", "LES", "EGRE",
-  "ELES", "EQUAL", "NEQUAL", "IF", "ELSE", "WHILE", "FUNC", "RETV",
-  "CONTINUE", "BREAK", "RET", "COL", "ID", "NUM", "$accept", "Program",
+  "ELES", "EQUAL", "NEQUAL", "IF", "ELSE", "WHILE", "FUNCTION", "RETV",
+  "CONTINUE", "BREAK", "RETURN", "COL", "ID", "NUM", "$accept", "Program",
   "ProgramElementList", "ProgramElement", "VarDeclStmt", "VarDecl",
   "VarDeclArray", "VarDeclScalar", "Type", "VarDef", "VarDefScalar",
   "RightVal", "ArithExpr", "ArithUExpr", "ArithBiOpExpr", "ExprUnit",

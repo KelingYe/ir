@@ -26,7 +26,7 @@ extern int line, col;
 "("                  {  yylval.pos = A_Pos(line, col); col += yyleng; return LPAR;}
 ")"                  {  yylval.pos = A_Pos(line, col); col += yyleng; return RPAR;}
 ([1-9][0-9]*)|0      {  yylval.tokenNum = A_TokenNum(A_Pos(line, col), atoi(yytext)); col += yyleng; return NUM;}
-[a-zA-Z][a-zA-Z0-9]* {  int len = yyleng;
+[a-zA-Z_]+([a-zA-Z0-9_]*) {  int len = yyleng;
                         char* new_text = (char*)malloc((len+1)*sizeof(char));strcpy(new_text, yytext);
                         new_text[len]='\0';
                         yylval.tokenId = A_TokenId(A_Pos(line, col), new_text);

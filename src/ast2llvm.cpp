@@ -612,12 +612,18 @@ void ast2llvmBlock(aA_codeBlockStmt b, Temp_label *con_label, Temp_label *bre_la
     {
         AS_operand *r = ast2llvmRightVal(b->u.assignStmt->rightVal);
         AS_operand *l = ast2llvmLeftVal(b->u.assignStmt->leftVal);
+        // 如果l是int类型使用L_Move
         if (l->kind == OperandKind::TEMP && l->u.TEMP->type == TempType::INT_TEMP)
         {
             emit_irs.push_back(L_Move(r, l));
             break;
         }
-        emit_irs.push_back(L_Store(r, l));
+        //否则使用L_Store
+        else
+        {
+            emit_irs.push_back(L_Store(r, l));
+        }
+
         break;
     }
     case A_codeBlockStmtType::A_breakStmtKind:
@@ -750,6 +756,7 @@ void ast2llvmBlock(aA_codeBlockStmt b, Temp_label *con_label, Temp_label *bre_la
                     {
                         var = Temp_newtemp_int_ptr(0);
                         AS_operand *target = AS_Operand_Temp(var);
+                        //对数组中的元素赋值
                         emit_irs.push_back(L_Gep(target, base, AS_Operand_Const(i)));
                         emit_irs.push_back(L_Store(ast2llvmRightVal(vals[i]), target));
                     }
@@ -764,6 +771,7 @@ void ast2llvmBlock(aA_codeBlockStmt b, Temp_label *con_label, Temp_label *bre_la
                     {
                         var = Temp_newtemp_struct_ptr(0, *b->u.varDeclStmt->u.varDef->u.defArray->type->u.structType);
                         AS_operand *target = AS_Operand_Temp(var);
+                          //对数组中的元素赋值
                         emit_irs.push_back(L_Gep(target, base, AS_Operand_Const(i)));
                     }
                 }
@@ -835,8 +843,6 @@ AS_operand *ast2llvmLeftVal(aA_leftVal l)
         {
             return AS_Operand_Name(globalVarMap[id]);
         }
-        else
-            assert(0);
     }
     else if (l->kind == A_leftValType::A_arrValKind)
     {
@@ -853,8 +859,6 @@ AS_operand *ast2llvmLeftVal(aA_leftVal l)
             {
                 res = AS_Operand_Temp(Temp_newtemp_struct_ptr(0, arr->u.NAME->structname));
             }
-            else
-                assert(0);
         }
         else if (arr->kind == OperandKind::TEMP)
         {
@@ -866,11 +870,8 @@ AS_operand *ast2llvmLeftVal(aA_leftVal l)
             {
                 res = AS_Operand_Temp(Temp_newtemp_struct_ptr(0, arr->u.TEMP->structname));
             }
-            else
-                assert(0);
         }
-        else
-            assert(0);
+        // 给数组中的值赋值
         emit_irs.push_back(L_Gep(res, arr, index));
         return res;
     }
@@ -881,9 +882,10 @@ AS_operand *ast2llvmLeftVal(aA_leftVal l)
         AS_operand *index;
         if (base->kind == OperandKind::NAME)
         {
+            // 获得struct中的offset
             int offset = structInfoMap[base->u.NAME->structname].memberinfos[*l->u.memberExpr->memberId].offset;
-            index = AS_Operand_Const(offset);
             TempDef def = structInfoMap[base->u.NAME->structname].memberinfos[*l->u.memberExpr->memberId].def;
+            index = AS_Operand_Const(offset);
             if (base->u.NAME->type == TempType::STRUCT_TEMP)
             {
                 if (def.kind == TempType::INT_TEMP)
@@ -902,17 +904,14 @@ AS_operand *ast2llvmLeftVal(aA_leftVal l)
                 {
                     res = AS_Operand_Temp(Temp_newtemp_struct_ptr(def.len, def.structname));
                 }
-                else
-                    assert(0);
             }
-            else
-                assert(0);
         }
         else if (base->kind == OperandKind::TEMP)
         {
+            // 获得struct中的offset
             int offset = structInfoMap[base->u.TEMP->structname].memberinfos[*l->u.memberExpr->memberId].offset;
-            index = AS_Operand_Const(offset);
             TempDef def = structInfoMap[base->u.TEMP->structname].memberinfos[*l->u.memberExpr->memberId].def;
+            index = AS_Operand_Const(offset);
             if (base->u.TEMP->type == TempType::STRUCT_PTR && base->u.TEMP->len == 0)
             {
                 if (def.kind == TempType::INT_TEMP)
@@ -931,14 +930,9 @@ AS_operand *ast2llvmLeftVal(aA_leftVal l)
                 {
                     res = AS_Operand_Temp(Temp_newtemp_struct_ptr(def.len, def.structname));
                 }
-                else
-                    assert(0);
             }
-            else
-                assert(0);
         }
-        else
-            assert(0);
+        // 给struct中的值赋值
         emit_irs.push_back(L_Gep(res, base, index));
         return res;
     }
@@ -958,10 +952,12 @@ AS_operand *ast2llvmIndexExpr(aA_indexExpr index)
         {
             AS_operand *res = AS_Operand_Temp(Temp_newtemp_int());
             AS_operand *mid = AS_Operand_Temp(localVarMap[id]);
+            // 如果 id是int类型，直接返回
             if (localVarMap[id]->type == TempType::INT_TEMP)
             {
                 return mid;
             }
+            // 如果 id是int_ptr类型，需要先L_Load
             emit_irs.push_back(L_Load(res, mid));
             return res;
         }
@@ -971,8 +967,6 @@ AS_operand *ast2llvmIndexExpr(aA_indexExpr index)
             emit_irs.push_back(L_Load(res, AS_Operand_Name(globalVarMap[id])));
             return res;
         }
-        else
-            assert(0);
     }
     else
     {
@@ -1203,7 +1197,7 @@ AS_operand *ast2llvmExprUnit(aA_exprUnit e)
     }
     break;
     case A_exprUnitType::A_memberExprKind:
-        {
+    {
         AS_operand *struc = ast2llvmLeftVal(e->u.memberExpr->structId);
         AS_operand *mid = AS_Operand_Temp(Temp_newtemp_int_ptr(0));
         AS_operand *res = AS_Operand_Temp(Temp_newtemp_int());
@@ -1226,7 +1220,7 @@ AS_operand *ast2llvmExprUnit(aA_exprUnit e)
         else
             assert(0);
     }
-        break;
+    break;
 
     default:
         assert(0);

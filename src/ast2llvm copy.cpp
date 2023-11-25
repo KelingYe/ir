@@ -505,104 +505,78 @@ std::vector<LLVMIR::L_def*> ast2llvmProg_first(aA_program p)
     return defs;
 }
 
-// 第二次遍历程序ast
-std::vector<Func_local *> ast2llvmProg_second(aA_program p)
+std::vector<Func_local*> ast2llvmProg_second(aA_program p)
 {
-    vector<Func_local *> funs;
-    for (const auto &v : p->programElements)
-    {
+    vector<Func_local*> funcs;
+    for (const auto &v:p->programElements){
         switch (v->kind)
         {
-        case A_programFnDefKind:
-        {
-            funs.push_back(ast2llvmFunc(v->u.fnDef));
+        case A_programElementType::A_programFnDefKind:
+            funcs.push_back(ast2llvmFunc(v->u.fnDef));
             emit_irs.clear();
             localVarMap.clear();
             break;
-        }
+        
         default:
             break;
         }
     }
-    return funs;
+    return funcs;
 }
 
-Func_local *ast2llvmFunc(aA_fnDef f)
+Func_local* ast2llvmFunc(aA_fnDef f)
 {
-    vector<Temp_temp *> args;
-    Temp_temp *arg;
-    bool has_intParam = false;
-    // 生成函数名对应的标签
-    string fun_name = *f->fnDecl->id;
-    emit_irs.push_back(L_Label(Temp_newlabel_named(fun_name)));
-    for (const auto &decl : f->fnDecl->paramDecl->varDecls)
-    {
-        if (decl->kind == A_varDeclScalarKind)
-        {
-            if (decl->u.declScalar->type->type == A_structTypeKind)
-            {
-                arg = Temp_newtemp_struct_ptr(0, *(decl->u.declScalar->type->u.structType));
-                args.push_back(arg);
-                localVarMap.emplace(*(decl->u.declScalar->id), arg);
-            }
-            else
-            {
+    vector<Temp_temp*> args;
+    Temp_temp* arg;
+    emit_irs.push_back(L_Label(Temp_newlabel_named(*f->fnDecl->id)));
+    bool has_int_param = false;
+    for (const auto &decl:f->fnDecl->paramDecl->varDecls){
+        if (decl->kind == A_varDeclType::A_varDeclScalarKind){
+            if (decl->u.declScalar->type->type == A_dataType::A_nativeTypeKind){
                 arg = Temp_newtemp_int();
                 args.push_back(arg);
-                // 对于int类型的参数处理有不同
-                Temp_temp *var = Temp_newtemp_int_ptr(0);
-                AS_operand *dst = AS_Operand_Temp(var);
+                Temp_temp* var=Temp_newtemp_int_ptr(0);
+                localVarMap.emplace(*decl->u.declScalar->id,var);
+                AS_operand* dst=AS_Operand_Temp(var);
                 emit_irs.push_back(L_Alloca(dst));
-                // 将arg的值传给dst
-                emit_irs.push_back(L_Store(AS_Operand_Temp(arg), dst));
-                // 局部变量temp类型应该是int_ptr型
-                localVarMap.emplace(*(decl->u.declScalar->id), var);
-                has_intParam = true;
-            }
-        }
-        else if (decl->kind == A_varDeclArrayKind)
-        {
-            if (decl->u.declArray->type->type == A_structTypeKind)
-            {
-                arg = Temp_newtemp_struct_ptr(-1, *(decl->u.declArray->type->u.structType));
+                emit_irs.push_back(L_Store(AS_Operand_Temp(arg),dst));
+                has_int_param = true;
+            } else if (decl->u.declScalar->type->type == A_dataType::A_structTypeKind){
+                arg = Temp_newtemp_struct_ptr(0,*decl->u.declScalar->type->u.structType);
                 args.push_back(arg);
-                localVarMap.emplace(*(decl->u.declArray->id), arg);
+                localVarMap.emplace(*decl->u.declScalar->id,arg);
             }
-            else
-            {
-                arg = Temp_newtemp_int_ptr(-1);
+            else assert(0);
+        } else if (decl->kind == A_varDeclType::A_varDeclArrayKind){
+            if (decl->u.declArray->type->type == A_dataType::A_nativeTypeKind){
+                arg=Temp_newtemp_int_ptr(-1);
                 args.push_back(arg);
-                localVarMap.emplace(*(decl->u.declArray->id), arg);
+                localVarMap.emplace(*decl->u.declArray->id,arg);
+            } else if (decl->u.declArray->type->type == A_dataType::A_structTypeKind){
+                arg=Temp_newtemp_struct_ptr(-1,*decl->u.declArray->type->u.structType);
+                args.push_back(arg);
+                localVarMap.emplace(*decl->u.declArray->id,arg);
             }
+            else assert(0);
         }
-        else
-        {
-            assert(0);
-        }
+        else assert(0);
     }
-    // 有int型参数，需要标签跳转
-    if (has_intParam)
-    {
-        Temp_label *l = Temp_newlabel();
-        // 跳转到指定的label处
-        emit_irs.push_back(L_Jump(l));
-        emit_irs.push_back(L_Label(l));
+    if (has_int_param){
+        Temp_label* label = Temp_newlabel();
+        emit_irs.push_back(L_Jump(label));
+        emit_irs.push_back(L_Label(label));
     }
-    // 对函数体中的每条指令处理
-    for (const auto &stmt : f->stmts)
-    {
+    for (const auto &stmt:f->stmts){
         ast2llvmBlock(stmt, nullptr, nullptr);
     }
-    // 对没有return语句的函数处理？？？
-    //   if (emit_irs.back()->type != L_StmKind::T_RETURN){
-    //       if (funcReturnMap[*f->fnDecl->id].type == ReturnType::VOID_TYPE)
-    //           emit_irs.push_back(L_Ret(nullptr));
-    //       else
-    //           emit_irs.push_back(L_Ret(AS_Operand_Const(0)));
-    //   }
-    return new Func_local(fun_name, funcReturnMap[fun_name], args, emit_irs);
+    if (emit_irs.back()->type != L_StmKind::T_RETURN){
+        if (funcReturnMap[*f->fnDecl->id].type == ReturnType::VOID_TYPE)
+            emit_irs.push_back(L_Ret(nullptr));
+        else
+            emit_irs.push_back(L_Ret(AS_Operand_Const(0)));
+    }
+    return new Func_local(*f->fnDecl->id,funcReturnMap[*f->fnDecl->id],args,emit_irs);
 }
-
 
 void ast2llvmBlock(aA_codeBlockStmt b,Temp_label *con_label,Temp_label *bre_label)
 {
